@@ -24,8 +24,6 @@ class BucketSystem {
             if (bucket.emptyVolume >= quantity) {
                 const placedBalls = this.placeBallsInBucket(bucket, color, quantity);
                 console.log(`${bucket.name}: Place ${placedBalls.length} ${color} balls.`);
-
-                // Update the emptyVolume of the bucket
                 bucket.emptyVolume -= placedBalls.reduce((totalVolume, ball) => totalVolume + ball.volume, 0);
                 return;
             }
@@ -46,8 +44,6 @@ class BucketSystem {
                 }
             }
         }
-
-        // Remove placed balls from the array
         placedBalls.forEach(ball => {
             const index = this.balls.indexOf(ball);
             if (index !== -1) {
@@ -58,8 +54,6 @@ class BucketSystem {
         return placedBalls;
     }
 }
-
-// Function definitions
 function createBucket(name, volume) {
     return new Bucket(name, volume);
 }
@@ -71,8 +65,6 @@ function createBall(color, volume) {
 function createBucketSystem(buckets, balls) {
     return new BucketSystem(buckets, balls);
 }
-
-// Example Usage
 const buckets = [createBucket("Bucket A", 100), createBucket("Bucket B", 150)];
 const balls = [
     createBall("Pink", 5),
@@ -83,17 +75,11 @@ const balls = [
 ];
 
 const system = createBucketSystem(buckets, balls);
-
-// User inputs
 system.suggestPlacement("Blue", 20);
 system.suggestPlacement("Yellow", 10);
-
-// Additional Example Usage
 system.suggestPlacement("Pink", 15);
 system.suggestPlacement("Green", 12);
 system.suggestPlacement("Red", 5);
-
-// Display the state of the buckets and remaining balls
 console.log("\nCurrent State:");
 for (let bucket of system.buckets) {
     console.log(`${bucket.name}: Empty Volume - ${bucket.emptyVolume} cubic inches`);
