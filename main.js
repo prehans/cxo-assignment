@@ -1,3 +1,5 @@
+const readline = require('readline');
+
 class Bucket {
     constructor(name, volume) {
         this.name = name;
@@ -17,6 +19,7 @@ class BucketSystem {
     constructor(buckets, balls) {
         this.buckets = buckets;
         this.balls = balls;
+        this.sessionEmptyVolumeChanges = {};
     }
 
     suggestPlacement(color, quantity) {
@@ -24,7 +27,14 @@ class BucketSystem {
             if (bucket.emptyVolume >= quantity) {
                 const placedBalls = this.placeBallsInBucket(bucket, color, quantity);
                 console.log(`${bucket.name}: Place ${placedBalls.length} ${color} balls.`);
-                bucket.emptyVolume -= placedBalls.reduce((totalVolume, ball) => totalVolume + ball.volume, 0);
+                const totalVolumeChange = placedBalls.reduce((totalVolume, ball) => totalVolume + ball.volume, 0);
+                bucket.emptyVolume -= totalVolumeChange;
+
+                if (!this.sessionEmptyVolumeChanges[bucket.name]) {
+                    this.sessionEmptyVolumeChanges[bucket.name] = 0;
+                }
+                this.sessionEmptyVolumeChanges[bucket.name] += totalVolumeChange;
+
                 return;
             }
         }
@@ -54,6 +64,7 @@ class BucketSystem {
         return placedBalls;
     }
 }
+
 function createBucket(name, volume) {
     return new Bucket(name, volume);
 }
@@ -65,27 +76,51 @@ function createBall(color, volume) {
 function createBucketSystem(buckets, balls) {
     return new BucketSystem(buckets, balls);
 }
-const buckets = [createBucket("Bucket A", 100), createBucket("Bucket B", 150)];
-const balls = [
-    createBall("Pink", 5),
-    createBall("Red", 7),
-    createBall("Blue", 8),
-    createBall("Orange", 6),
-    createBall("Green", 10),
-];
 
-const system = createBucketSystem(buckets, balls);
-system.suggestPlacement("Blue", 20);
-system.suggestPlacement("Yellow", 10);
-system.suggestPlacement("Pink", 15);
-system.suggestPlacement("Green", 12);
-system.suggestPlacement("Red", 5);
-console.log("\nCurrent State:");
-for (let bucket of system.buckets) {
-    console.log(`${bucket.name}: Empty Volume - ${bucket.emptyVolume} cubic inches`);
+function getUserInput(question) {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    return new Promise(resolve => {
+        rl.question(question, answer => {
+            rl.close();
+            resolve(answer);
+        });
+    });
 }
 
-console.log("\nRemaining Balls:");
-for (let ball of system.balls) {
-    console.log(`${ball.color} Ball: Volume - ${ball.volume} cubic inches`);
+async function main() {
+    const buckets = [createBucket("Bucket A", 100), createBucket("Bucket B", 150)];
+    const balls = [
+        createBall("Pink", 5),
+        createBall("Red", 7),
+        createBall("Blue", 8),
+        createBall("Orange", 6),
+        createBall("Green", 10),
+    ];
+
+    const system = createBucketSystem(buckets, balls);
+
+
+    const color = await getUserInput("Enter the color of the balls: ");
+    const quantity = parseInt(await getUserInput("Enter the quantity of balls to be placed: "), 10);
+
+    system.suggestPlacement(color, quantity);
+
+    console.log("\nCurrent State:");
+    for (let bucket of system.buckets) {
+        console.log(`${bucket.name}: Empty Volume - ${bucket.emptyVolume} cubic inches`);
+    }
+
+    console.log("\nRemaining Balls:");
+    for (let ball of system.balls) {
+        console.log(`${ball.color} Ball: Volume - ${ball.volume} cubic inches`);
+    }
+
+    console.log("\nEmpty Volume Changes in the Session:");
+    console.log(system.sessionEmptyVolumeChanges);
 }
+
+main();
